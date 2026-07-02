@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lawang Sewu — Panel Pemantau</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+  /* ============ THEME TOKENS ============ */
+  :root{
+    /* accents — constant across themes, this is the brand identity */
+    --batik: #7a1f2b;
+    --batik-2: #9c2e3a;
+    --brass: #cd9a3d;
+    --brass-bright: #e8bb5c;
+    --teal: #2b6e63;
+    --radius-lg: 20px;
+    --radius-md: 14px;
+    --radius-sm: 9px;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'Manrope', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html[data-theme="dark"]{
+    --bg-base: #120f1c;
+    --text: #efe6d3;
+    --text-dim: #b3a892;
+    --panel-bg: rgba(30, 26, 51, 0.62);
+    --panel-bg-2: rgba(38, 32, 63, 0.6);
+    --panel-solid: #1c1930;
+    --line: rgba(239,230,211,0.13);
+    --line-strong: rgba(239,230,211,0.24);
+    --shadow: 0 28px 70px -28px rgba(0,0,0,0.75);
+    --overlay-a: rgba(11,9,18,0.93);
+    --overlay-b: rgba(18,13,17,0.88);
+    --input-bg: rgba(8,7,15,0.55);
+    --good: #7ec488;
+    --warn: #e0a24f;
+    --scrollbar: rgba(239,230,211,0.2);
+  }
+  html[data-theme="light"]{
+    --bg-base: #f3ead4;
+    --text: #2b1c12;
+    --text-dim: #7d6a51;
+    --panel-bg: rgba(255, 251, 241, 0.72);
+    --panel-bg-2: rgba(255, 246, 227, 0.82);
+    --panel-solid: #fffaf0;
+    --line: rgba(80, 52, 20, 0.14);
+    --line-strong: rgba(80, 52, 20, 0.26);
+    --shadow: 0 22px 55px -24px rgba(96,63,25,0.32);
+    --overlay-a: rgba(246,238,220,0.90);
+    --overlay-b: rgba(250,243,226,0.95);
+    --input-bg: rgba(255,255,255,0.65);
+    --good: #3f8a4d;
+    --warn: #a86121;
+    --scrollbar: rgba(80,52,20,0.25);
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html{scrollbar-color: var(--scrollbar) transparent;}
+  body{
+    background:
+      linear-gradient(var(--overlay-a), var(--overlay-b)),
+      url('https://www.batikprabuseno.com/artikel/wp-content/uploads/2024/06/Makna-Motif-Batik-Gunungan-Motif-Batik-Klasik-Indonesia.png');
+    background-repeat: repeat, repeat;
+    background-size: 420px auto, 420px auto;
+    background-attachment: fixed, fixed;
+    color:var(--text);
+    font-family: var(--font-body);
+    min-height:100vh;
+    padding:28px 20px 80px;
+    transition: background-color .35s ease, color .35s ease;
+    -webkit-font-smoothing:antialiased;
+  }
+  @media (max-width: 640px){
+    body{ background-attachment: scroll, scroll; }
+  }
+  .wrap{max-width:1100px; margin:0 auto;}
+
+  a{color:var(--brass-bright);}
+  ::selection{ background: var(--brass); color:#231a05; }
+
+  /* ---- Top bar: title strip + theme toggle ---- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:16px; gap:12px; flex-wrap:wrap;
+  }
+  .brandmark{
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:11.5px; letter-spacing:0.16em; text-transform:uppercase;
+    color:var(--text-dim);
+  }
+  .brandmark .rule{width:26px; height:1px; background:var(--brass); display:inline-block;}
+
+  .theme-toggle{
+    display:flex; align-items:center; gap:8px;
+    background: var(--panel-bg); border:1px solid var(--line-strong);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-radius:999px; padding:7px 14px 7px 7px; cursor:pointer;
+    font-family:var(--font-mono); font-size:11.5px; color:var(--text);
+    transition: border-color .2s ease, transform .15s ease;
+  }
+  .theme-toggle:hover{border-color:var(--brass);}
+  .theme-toggle:active{transform:scale(0.96);}
+  .theme-toggle .knob{
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    background: linear-gradient(180deg, var(--brass-bright), var(--brass)); flex-shrink:0;
+  }
+  .theme-toggle .knob svg{width:13px; height:13px;}
+  html[data-theme="dark"] .icon-sun{display:none;}
+  html[data-theme="light"] .icon-moon{display:none;}
+
+  /* ---- Hero: gerbang pintu ---- */
+  .hero{
+    position:relative;
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    background:linear-gradient(165deg, var(--panel-bg), var(--panel-bg-2));
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
+    padding:34px clamp(20px,4vw,48px);
+    overflow:hidden;
+    margin-bottom:22px;
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background-image: repeating-linear-gradient(90deg, transparent, transparent 38px, rgba(205,154,61,0.055) 38px, rgba(205,154,61,0.055) 40px);
+    pointer-events:none;
+  }
+  .gunungan{
+    position:absolute; right:-40px; top:-30px; width:260px; height:auto;
+    opacity:0.09; pointer-events:none; color:var(--brass);
+  }
+  html[data-theme="light"] .gunungan{ opacity:0.14; }
+
+  .eyebrow{
+    position:relative;
+    display:flex; align-items:center; gap:10px;
+    font-family:var(--font-mono); font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+    color:var(--brass-bright);
+    margin-bottom:16px;
+  }
+  .dot-live{
+    width:8px; height:8px; border-radius:50%; background:var(--good);
+    box-shadow:0 0 0 0 rgba(110,169,119,0.6);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%{box-shadow:0 0 0 0 rgba(110,169,119,0.55);}
+    70%{box-shadow:0 0 0 8px rgba(110,169,119,0);}
+    100%{box-shadow:0 0 0 0 rgba(110,169,119,0);}
+  }
+  .hero-top{position:relative; display:flex; gap:22px; align-items:center; flex-wrap:wrap;}
+  .icon-box{
+    width:78px; height:78px; border-radius:16px; overflow:hidden;
+    border:1px solid var(--line-strong); background:var(--panel-solid); flex-shrink:0;
+    box-shadow: 0 8px 24px -10px rgba(0,0,0,0.4);
+  }
+  .icon-box img{width:100%; height:100%; object-fit:cover; display:block;}
+  h1{
+    font-family:var(--font-display); font-weight:600;
+    font-size:clamp(23px, 3.4vw, 34px);
+    letter-spacing:-0.01em;
+  }
+  .sub{color:var(--text-dim); font-size:13.5px; margin-top:5px; font-family:var(--font-mono);}
+
+  /* doors row — signature element */
+  .doors{
+    position:relative;
+    display:flex; gap:6px; margin-top:28px; height:70px; align-items:flex-end;
+  }
+  .door{
+    flex:1; min-width:6px; border-radius:9px 9px 0 0;
+    background: linear-gradient(180deg, var(--panel-bg-2), transparent);
+    border:1px solid var(--line); border-bottom:none;
+    height:22%;
+    transition: height 0.6s ease, background 0.6s ease, box-shadow 0.6s ease;
+  }
+  .door.lit{
+    background:linear-gradient(180deg, var(--brass-bright), var(--brass));
+    box-shadow:0 0 14px rgba(232,187,92,0.5);
+    border-color: var(--brass-bright);
+  }
+  .doors-caption{
+    font-family:var(--font-mono); font-size:11px; color:var(--text-dim);
+    margin-top:9px; letter-spacing:0.03em;
+  }
+
+  .hero-stat{position:relative; margin-top:24px; display:flex; gap:40px; flex-wrap:wrap;}
+  .big-num{font-family:var(--font-display); font-size:clamp(38px,6vw,58px); font-weight:700; line-height:1; color:var(--text);}
+  .big-label{font-size:12.5px; color:var(--text-dim); margin-top:7px; font-family:var(--font-mono); text-transform:uppercase; letter-spacing:0.06em;}
+
+  /* ---- Stat cards ---- */
+  .grid-cards{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr));
+    gap:14px; margin-bottom:22px;
+  }
+  .card{
+    background:var(--panel-bg); border:1px solid var(--line); border-radius:var(--radius-md);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    padding:19px 20px;
+    box-shadow: var(--shadow);
+    transition: border-color .2s ease, transform .2s ease;
+  }
+  .card:hover{ border-color: var(--line-strong); transform: translateY(-2px); }
+  .card .label{font-size:11.5px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.09em; font-family:var(--font-mono);}
+  .card .val{font-family:var(--font-mono); font-size:27px; font-weight:700; margin-top:9px; color:var(--brass-bright);}
+  .card .delta{font-size:12px; margin-top:7px; font-family:var(--font-mono);}
+  .delta.up{color:var(--good);}
+  .delta.flat{color:var(--text-dim);}
+
+  /* ---- Section shell ---- */
+  section.block{
+    background:var(--panel-bg); border:1px solid var(--line); border-radius:var(--radius-lg);
+    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    box-shadow: var(--shadow);
+    padding:24px clamp(16px,3vw,30px); margin-bottom:20px;
+  }
+  .block-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:18px; gap:12px; flex-wrap:wrap;}
+  .block-head h2{font-family:var(--font-display); font-size:20px; font-weight:600;}
+  .block-head p{font-size:12.5px; color:var(--text-dim); margin-top:4px; max-width:56ch;}
+
+  /* chart */
+  .chart-wrap{overflow-x:auto;}
+  svg.chart{display:block; min-width:520px;}
+  .bar{fill:var(--brass); transition:fill .2s;}
+  .bar:hover{fill:var(--brass-bright);}
+  .axis-label{fill:var(--text-dim); font-size:10px; font-family:var(--font-mono);}
+
+  /* staff */
+  .staff-form{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  input, select{
+    background:var(--input-bg); border:1px solid var(--line); color:var(--text);
+    border-radius:var(--radius-sm); padding:10px 13px; font-size:14px; font-family:inherit;
+    outline:none; transition: border-color .15s ease;
+  }
+  input::placeholder{color:var(--text-dim);}
+  input:focus-visible, select:focus-visible, button:focus-visible, .theme-toggle:focus-visible{
+    border-color: var(--brass-bright);
+    box-shadow: 0 0 0 3px rgba(232,187,92,0.22);
+  }
+  button{
+    border:none; border-radius:var(--radius-sm); padding:10px 17px; font-size:13.5px; font-weight:700;
+    cursor:pointer; font-family:var(--font-body); transition: transform .15s, opacity .15s, filter .15s;
+  }
+  button:hover{filter:brightness(1.08);}
+  button:active{transform:scale(0.97);}
+  .btn-brass{background:linear-gradient(180deg, var(--brass-bright), var(--brass)); color:#231a05;}
+  .btn-ghost{background:transparent; border:1px solid var(--line-strong); color:var(--text);}
+  .btn-ghost:hover{border-color:var(--brass);}
+  .btn-in{background:var(--teal); color:#eafff9;}
+  .btn-out{background:var(--batik); color:#ffe9e5;}
+
+  .staff-list{display:flex; flex-wrap:wrap; gap:9px; margin-bottom:20px;}
+  .staff-chip{
+    display:flex; align-items:center; gap:9px;
+    background: var(--panel-bg-2);
+    border:1px solid var(--line); border-radius:999px; padding:6px 6px 6px 8px;
+    font-size:13px;
+  }
+  .staff-avatar{
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:var(--font-mono); font-size:10.5px; font-weight:700; color:#fff8ec; flex-shrink:0;
+  }
+  .staff-chip .status{width:7px; height:7px; border-radius:50%; background:var(--text-dim); flex-shrink:0;}
+  .staff-chip .status.on{background:var(--good); box-shadow:0 0 6px var(--good);}
+  .staff-chip button{padding:5px 11px; font-size:11.5px; border-radius:999px;}
+
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  thead th{
+    text-align:left; font-family:var(--font-mono); font-size:10.5px;
+    text-transform:uppercase; letter-spacing:0.06em; color:var(--text-dim);
+    border-bottom:1px solid var(--line); padding:9px 10px;
+  }
+  tbody td{padding:10px; border-bottom:1px solid var(--line);}
+  tbody tr:hover{background:var(--panel-bg-2);}
+  .tag{ font-size:11px; padding:3px 9px; border-radius:999px; font-weight:700; font-family:var(--font-mono); }
+  .tag.in{background:rgba(43,110,99,0.3); color:#7fd6bf;}
+  .tag.out{background:rgba(122,31,43,0.28); color:#f0929a;}
+  html[data-theme="light"] .tag.in{ background:rgba(43,110,99,0.16); color:#1f5b50; }
+  html[data-theme="light"] .tag.out{ background:rgba(122,31,43,0.14); color:#7a1f2b; }
+  .empty{color:var(--text-dim); font-size:13px; padding:16px 4px;}
+
+  .settings-row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+  .settings-row label{font-size:13px; color:var(--text-dim);}
+  .foot-note{font-size:11.5px; color:var(--text-dim); margin-top:12px; line-height:1.7;}
+  .status-msg{font-size:12.5px; color:var(--brass-bright); min-height:16px; font-family:var(--font-mono);}
+
+  footer.page-foot{
+    text-align:center; font-size:11.5px; color:var(--text-dim);
+    margin-top:26px; font-family:var(--font-mono); letter-spacing:0.04em;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .dot-live{animation:none;}
+    .door{transition:none;}
+    .card{transition:none;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="topbar">
+    <div class="brandmark"><span class="rule"></span> Lawang Sewu · Panel Operasional</div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema terang/gelap">
+      <span class="knob">
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="#231a05" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="#231a05"><path d="M20.4 14.7A8.4 8.4 0 019.3 3.6a8.9 8.9 0 108.1 15.5 8.4 8.4 0 013-4.4z"/></svg>
+      </span>
+      <span id="themeLabel">Gelap</span>
+    </button>
+  </div>
+
+  <div class="hero">
+    <svg class="gunungan" viewBox="0 0 200 220" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M100 6C70 40 60 70 62 100c1 24 12 40 12 56 0 14-10 24-24 32h100c-14-8-24-18-24-32 0-16 11-32 12-56 2-30-8-60-38-94z"/>
+      <path d="M40 214c8-20 24-34 60-34s52 14 60 34" />
+    </svg>
+    <div class="eyebrow"><span class="dot-live"></span> Realtime · diperbarui otomatis</div>
+    <div class="hero-top">
+      <div class="icon-box"><img id="gameIcon" alt=""></div>
+      <div>
+        <h1 id="gameName">NEW LAWANG SEWHU</h1>
+        <div class="sub" id="gameSub">Memuat data dari Roblox…</div>
+      </div>
+    </div>
+
+    <div class="hero-stat">
+      <div>
+        <div class="big-num" id="playingNow">—</div>
+        <div class="big-label">sedang bermain sekarang</div>
+      </div>
+      <div>
+        <div class="big-num" id="visitsToday">—</div>
+        <div class="big-label">kunjungan baru hari ini</div>
+      </div>
+    </div>
+
+    <div class="doors" id="doorsRow"></div>
+    <div class="doors-caption">tiap pintu mewakili kapasitas server saat ini — makin banyak menyala, makin ramai</div>
+  </div>
+
+  <div class="grid-cards">
+    <div class="card">
+      <div class="label">Total Kunjungan</div>
+      <div class="val" id="totalVisits">—</div>
+      <div class="delta flat" id="visitsDelta">menghitung selisih…</div>
+    </div>
+    <div class="card">
+      <div class="label">Max Player / Server</div>
+      <div class="val" id="maxPlayers">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Rasio Suka</div>
+      <div class="val" id="likeRatio">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Staff Sedang Shift</div>
+      <div class="val" id="staffOnNow">—</div>
+    </div>
+  </div>
+
+  <section class="block">
+    <div class="block-head">
+      <div>
+        <h2>Kenaikan Visitor per Hari</h2>
+        <p>Selisih kunjungan dihitung dari snapshot yang tersimpan setiap kali panel ini dibuka</p>
+      </div>
+    </div>
+    <div class="chart-wrap"><svg class="chart" id="chart" viewBox="0 0 760 220"></svg></div>
+    <p class="foot-note" id="chartNote"></p>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div>
+        <h2>Absensi Staff</h2>
+        <p>Staff mulai/selesai shift di sini — datanya tersimpan dan terlihat oleh semua yang membuka panel ini</p>
+      </div>
+    </div>
+
+    <div class="staff-form">
+      <input type="text" id="newStaffName" placeholder="Nama staff baru…" style="flex:1; min-width:160px;">
+      <button class="btn-brass" id="addStaffBtn">+ Tambah Staff</button>
+    </div>
+
+    <div class="staff-list" id="staffList"></div>
+
+    <div class="staff-form">
+      <input type="text" id="shiftNote" placeholder="Catatan shift (opsional)…" style="flex:1; min-width:160px;">
+    </div>
+    <div class="status-msg" id="staffStatusMsg"></div>
+
+    <table style="margin-top:14px;">
+      <thead>
+        <tr><th>Waktu</th><th>Staff</th><th>Aksi</th><th>Catatan</th></tr>
+      </thead>
+      <tbody id="logBody"></tbody>
+    </table>
+    <div class="empty" id="logEmpty" style="display:none;">Belum ada catatan shift.</div>
+  </section>
+
+  <section class="block">
+    <div class="block-head">
+      <div>
+        <h2>Pengaturan</h2>
+        <p>ID map dan interval refresh</p>
+      </div>
+    </div>
+    <div class="settings-row">
+      <label>Place ID</label>
+      <input type="text" id="placeIdInput" value="122776050783977" style="width:200px;">
+      <label>Refresh tiap</label>
+      <select id="refreshInterval">
+        <option value="30000">30 detik</option>
+        <option value="60000" selected>1 menit</option>
+        <option value="300000">5 menit</option>
+      </select>
+      <button class="btn-ghost" id="applyBtn">Terapkan</button>
+    </div>
+    <p class="foot-note">
+      Data visitor &amp; playing-now diambil langsung dari API publik Roblox, jadi selalu real-time. Grafik kenaikan harian dibangun dari snapshot yang direkam otomatis setiap panel ini dibuka — kalau panel tidak pernah dibuka di suatu hari, hari itu tidak tercatat. Roblox tidak menyediakan data siapa saja yang online per akun, jadi bagian "Absensi Staff" di atas adalah log manual yang diisi staff sendiri saat mulai/selesai shift.
+    </p>
+  </section>
+
+  <footer class="page-foot">Lawang Sewu Monitor · dibangun untuk pemantauan komunitas</footer>
+
+</div>
+
+<script>
+(function(){
+  const PROXY_BASE_UNIVERSE = "https://apis.roproxy.com/universes/v1/places/";
+  const PROXY_GAMES = "https://games.roproxy.com/v1/games?universeIds=";
+  const PROXY_VOTES = "https://games.roproxy.com/v1/games/votes?universeIds=";
+  const PROXY_ICON = "https://thumbnails.roproxy.com/v1/games/icons?universeIds=";
+
+  let universeId = null;
+  let refreshTimer = null;
+  let staffState = {}; // name -> boolean (on shift)
+
+  const $ = (id) => document.getElementById(id);
+
+  function todayKey(){
+    const d = new Date();
+    return d.toISOString().slice(0,10); // YYYY-MM-DD
+  }
+
+  function fmt(n){
+    if(n === null || n === undefined || isNaN(n)) return "—";
+    return Number(n).toLocaleString('id-ID');
+  }
+
+  async function safeStorageGet(key, shared){
+    try{
+      const r = await window.storage.get(key, shared);
+      return r ? r.value : null;
+    }catch(e){ return null; }
+  }
+  async function safeStorageSet(key, value, shared){
+    try{ await window.storage.set(key, value, shared); }catch(e){ console.error('storage set failed', key, e); }
+  }
+
+  // ---------- Theme ----------
+  async function initTheme(){
+    let theme = await safeStorageGet('ui:theme', false);
+    if(theme !== 'dark' && theme !== 'light'){
+      theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) ? 'light' : 'dark';
+    }
+    applyTheme(theme);
+  }
+  function applyTheme(theme){
+    document.documentElement.setAttribute('data-theme', theme);
+    $('themeLabel').textContent = theme === 'dark' ? 'Gelap' : 'Terang';
+  }
+  $('themeToggle').onclick = async () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const next = cur === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    await safeStorageSet('ui:theme', next, false);
+  };
+
+  // ---------- Fetch Roblox data ----------
+  async function resolveUniverseId(placeId){
+    const res = await fetch(PROXY_BASE_UNIVERSE + placeId + "/universe");
+    if(!res.ok) throw new Error("Gagal resolve universe id");
+    const data = await res.json();
+    return data.universeId;
+  }
+
+  async function fetchGameStats(uid){
+    const [gamesRes, votesRes, iconRes] = await Promise.all([
+      fetch(PROXY_GAMES + uid),
+      fetch(PROXY_VOTES + uid).catch(()=>null),
+      fetch(PROXY_ICON + uid + "&returnPolicy=PlaceHolder&size=256x256&format=Png&isCircular=false").catch(()=>null)
+    ]);
+    const games = await gamesRes.json();
+    const info = games.data && games.data[0];
+    let votes = null;
+    if(votesRes && votesRes.ok){
+      const v = await votesRes.json();
+      votes = v.data && v.data[0];
+    }
+    let icon = null;
+    if(iconRes && iconRes.ok){
+      const ic = await iconRes.json();
+      icon = ic.data && ic.data[0] && ic.data[0].imageUrl;
+    }
+    return {info, votes, icon};
+  }
+
+  function renderDoors(playing, maxPlayers){
+    const row = $('doorsRow');
+    row.innerHTML = '';
+    const total = 24;
+    const ratio = maxPlayers ? Math.min(1, playing / Math.max(maxPlayers*3, 1)) : 0;
+    const litCount = Math.round(ratio * total) || (playing > 0 ? 1 : 0);
+    for(let i=0;i<total;i++){
+      const d = document.createElement('div');
+      d.className = 'door' + (i < litCount ? ' lit' : '');
+      const baseH = 22 + Math.sin(i*0.7)*6;
+      d.style.height = (i < litCount ? (55 + (i%5)*7) : baseH) + '%';
+      row.appendChild(d);
+    }
+  }
+
+  async function recordSnapshot(visits, playing, favorites){
+    const key = 'stat:' + todayKey();
+    await safeStorageSet(key, JSON.stringify({visits, playing, favorites, ts: Date.now()}), true);
+  }
+
+  async function computeTodayDelta(visitsNow){
+    // find most recent snapshot date before today
+    let list;
+    try{ list = await window.storage.list('stat:', true); }catch(e){ list = null; }
+    if(!list || !list.keys) return null;
+    const dates = list.keys.map(k=>k.replace('stat:','')).filter(d=>d < todayKey()).sort();
+    if(dates.length === 0) return null;
+    const lastDate = dates[dates.length-1];
+    const raw = await safeStorageGet('stat:' + lastDate, true);
+    if(!raw) return null;
+    try{
+      const prev = JSON.parse(raw);
+      return visitsNow - prev.visits;
+    }catch(e){ return null; }
+  }
+
+  async function renderChart(){
+    let list;
+    try{ list = await window.storage.list('stat:', true); }catch(e){ list = null; }
+    const svg = $('chart');
+    svg.innerHTML = '';
+    if(!list || !list.keys || list.keys.length < 2){
+      $('chartNote').textContent = 'Grafik akan muncul setelah panel ini dibuka minimal 2 hari berbeda, supaya ada selisih yang bisa dihitung.';
+      return;
+    }
+    const dates = list.keys.map(k=>k.replace('stat:','')).sort().slice(-14);
+    const points = [];
+    for(let i=1;i<dates.length;i++){
+      const prevRaw = await safeStorageGet('stat:'+dates[i-1], true);
+      const curRaw = await safeStorageGet('stat:'+dates[i], true);
+      if(!prevRaw || !curRaw) continue;
+      try{
+        const prev = JSON.parse(prevRaw);
+        const cur = JSON.parse(curRaw);
+        points.push({date: dates[i], delta: Math.max(0, cur.visits - prev.visits)});
+      }catch(e){}
+    }
+    if(points.length === 0){
+      $('chartNote').textContent = 'Belum cukup data untuk menghitung selisih harian.';
+      return;
+    }
+    $('chartNote').textContent = 'Menampilkan ' + points.length + ' hari terakhir yang tercatat.';
+    const w = 760, h = 220, padL = 46, padB = 24, padT = 14;
+    const maxVal = Math.max(...points.map(p=>p.delta), 1);
+    const barW = (w - padL - 20) / points.length * 0.6;
+    const gap = (w - padL - 20) / points.length;
+
+    points.forEach((p, i)=>{
+      const barH = ((h - padB - padT) * (p.delta / maxVal));
+      const x = padL + i*gap + (gap - barW)/2;
+      const y = h - padB - barH;
+      const rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      rect.setAttribute('x', x); rect.setAttribute('y', y);
+      rect.setAttribute('width', barW); rect.setAttribute('height', barH);
+      rect.setAttribute('rx', 3);
+      rect.setAttribute('class','bar');
+      const title = document.createElementNS('http://www.w3.org/2000/svg','title');
+      title.textContent = p.date + ': +' + fmt(p.delta) + ' kunjungan';
+      rect.appendChild(title);
+      svg.appendChild(rect);
+
+      const label = document.createElementNS('http://www.w3.org/2000/svg','text');
+      label.setAttribute('x', x + barW/2); label.setAttribute('y', h - 6);
+      label.setAttribute('text-anchor','middle');
+      label.setAttribute('class','axis-label');
+      label.textContent = p.date.slice(5);
+      svg.appendChild(label);
+    });
+
+    // y axis line
+    const axis = document.createElementNS('http://www.w3.org/2000/svg','line');
+    axis.setAttribute('x1', padL-4); axis.setAttribute('y1', padT);
+    axis.setAttribute('x2', padL-4); axis.setAttribute('y2', h-padB);
+    axis.setAttribute('stroke', 'rgba(180,150,110,0.25)');
+    svg.appendChild(axis);
+  }
+
+  // ---------- Staff attendance ----------
+  const AVATAR_COLORS = ['#7a1f2b','#2b6e63','#cd9a3d','#4a5d8a','#8a4a6d','#3d7a5c'];
+  function colorForName(name){
+    let h = 0;
+    for(let i=0;i<name.length;i++) h = (h*31 + name.charCodeAt(i)) >>> 0;
+    return AVATAR_COLORS[h % AVATAR_COLORS.length];
+  }
+  function initials(name){
+    const parts = name.trim().split(/\s+/);
+    return ((parts[0]?.[0]||'') + (parts[1]?.[0]||'')).toUpperCase() || '?';
+  }
+
+  async function loadStaff(){
+    const raw = await safeStorageGet('staff:names', true);
+    let names = [];
+    try{ names = raw ? JSON.parse(raw) : []; }catch(e){ names = []; }
+    const logsRaw = await safeStorageGet('staff:logs', true);
+    let logs = [];
+    try{ logs = logsRaw ? JSON.parse(logsRaw) : []; }catch(e){ logs = []; }
+
+    staffState = {};
+    names.forEach(n => staffState[n] = false);
+    // derive current status from most recent log per staff
+    const latestByStaff = {};
+    logs.forEach(l => { latestByStaff[l.staff] = l; });
+    Object.keys(latestByStaff).forEach(name=>{
+      staffState[name] = latestByStaff[name].action === 'in';
+    });
+
+    renderStaffList(names);
+    renderLogs(logs);
+    $('staffOnNow').textContent = Object.values(staffState).filter(Boolean).length;
+  }
+
+  function renderStaffList(names){
+    const box = $('staffList');
+    box.innerHTML = '';
+    if(names.length === 0){
+      const p = document.createElement('div');
+      p.className = 'empty';
+      p.textContent = 'Belum ada staff. Tambahkan nama di atas.';
+      box.appendChild(p);
+      return;
+    }
+    names.forEach(name=>{
+      const on = !!staffState[name];
+      const chip = document.createElement('div');
+      chip.className = 'staff-chip';
+      chip.innerHTML = `
+        <span class="staff-avatar" style="background:${colorForName(name)}">${initials(name)}</span>
+        <span class="status ${on?'on':''}"></span>
+        <span>${escapeHtml(name)}</span>
+      `;
+      const btn = document.createElement('button');
+      btn.className = on ? 'btn-out' : 'btn-in';
+      btn.textContent = on ? 'Selesai Shift' : 'Mulai Shift';
+      btn.onclick = () => toggleShift(name, on ? 'out' : 'in');
+      chip.appendChild(btn);
+      box.appendChild(chip);
+    });
+  }
+
+  function renderLogs(logs){
+    const body = $('logBody');
+    body.innerHTML = '';
+    const sorted = [...logs].sort((a,b)=>b.time - a.time).slice(0,50);
+    $('logEmpty').style.display = sorted.length === 0 ? 'block' : 'none';
+    sorted.forEach(l=>{
+      const tr = document.createElement('tr');
+      const dt = new Date(l.time);
+      tr.innerHTML = `
+        <td>${dt.toLocaleString('id-ID')}</td>
+        <td>${escapeHtml(l.staff)}</td>
+        <td><span class="tag ${l.action}">${l.action==='in'?'Mulai':'Selesai'}</span></td>
+        <td>${escapeHtml(l.note||'—')}</td>
+      `;
+      body.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s){
+    const d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
+
+  async function toggleShift(name, action){
+    const logsRaw = await safeStorageGet('staff:logs', true);
+    let logs = [];
+    try{ logs = logsRaw ? JSON.parse(logsRaw) : []; }catch(e){ logs = []; }
+    logs.push({staff: name, action, time: Date.now(), note: $('shiftNote').value.trim()});
+    if(logs.length > 500) logs = logs.slice(-500);
+    await safeStorageSet('staff:logs', JSON.stringify(logs), true);
+    $('shiftNote').value = '';
+    $('staffStatusMsg').textContent = `${name} tercatat ${action==='in'?'mulai':'selesai'} shift.`;
+    setTimeout(()=>{ $('staffStatusMsg').textContent=''; }, 3000);
+    await loadStaff();
+  }
+
+  $('addStaffBtn').onclick = async () => {
+    const nameInput = $('newStaffName');
+    const name = nameInput.value.trim();
+    if(!name) return;
+    const raw = await safeStorageGet('staff:names', true);
+    let names = [];
+    try{ names = raw ? JSON.parse(raw) : []; }catch(e){ names = []; }
+    if(!names.includes(name)){
+      names.push(name);
+      await safeStorageSet('staff:names', JSON.stringify(names), true);
+    }
+    nameInput.value = '';
+    await loadStaff();
+  };
+
+  // ---------- Main refresh cycle ----------
+  async function refreshAll(){
+    const placeId = $('placeIdInput').value.trim();
+    $('gameSub').textContent = 'Memuat data dari Roblox…';
+    try{
+      if(!universeId){
+        universeId = await resolveUniverseId(placeId);
+      }
+      const {info, votes, icon} = await fetchGameStats(universeId);
+      if(!info) throw new Error('Data game tidak ditemukan');
+
+      $('gameName').textContent = info.name || 'Map Roblox';
+      $('gameSub').textContent = 'Universe ID ' + universeId + ' · terakhir diperbarui ' + new Date().toLocaleTimeString('id-ID');
+      if(icon) $('gameIcon').src = icon;
+
+      $('playingNow').textContent = fmt(info.playing);
+      $('totalVisits').textContent = fmt(info.visits);
+      $('maxPlayers').textContent = fmt(info.maxPlayers);
+
+      if(votes && (votes.upVotes || votes.downVotes)){
+        const total = (votes.upVotes||0) + (votes.downVotes||0);
+        const ratio = total ? Math.round((votes.upVotes/total)*100) : 0;
+        $('likeRatio').textContent = ratio + '%';
+      } else {
+        $('likeRatio').textContent = '—';
+      }
+
+      renderDoors(info.playing, info.maxPlayers);
+
+      await recordSnapshot(info.visits, info.playing, votes ? votes.upVotes : null);
+      const delta = await computeTodayDelta(info.visits);
+      if(delta === null){
+        $('visitsToday').textContent = '—';
+        $('visitsDelta').textContent = 'menunggu snapshot hari sebelumnya';
+        $('visitsDelta').className = 'delta flat';
+      } else {
+        $('visitsToday').textContent = (delta>=0?'+':'') + fmt(delta);
+        $('visitsDelta').textContent = delta >= 0 ? ('naik ' + fmt(delta) + ' sejak hari terakhir tercatat') : 'tidak ada kenaikan tercatat';
+        $('visitsDelta').className = 'delta ' + (delta > 0 ? 'up' : 'flat');
+      }
+
+      await renderChart();
+    }catch(err){
+      console.error(err);
+      const isFetchBlocked = /Failed to fetch|NetworkError|Load failed/i.test(err.message || '');
+      if(isFetchBlocked){
+        $('gameSub').textContent = 'Tidak bisa memanggil API Roblox dari sini. Kalau ini dibuka lewat preview di chat Claude, buka file HTML-nya langsung di browser (unduh lalu double-click) — preview chat memblokir panggilan ke domain luar.';
+      } else {
+        $('gameSub').textContent = 'Gagal memuat data — cek Place ID atau koneksi. (' + err.message + ')';
+      }
+    }
+  }
+
+  $('applyBtn').onclick = () => {
+    universeId = null;
+    clearInterval(refreshTimer);
+    refreshAll();
+    const ms = parseInt($('refreshInterval').value, 10);
+    refreshTimer = setInterval(refreshAll, ms);
+  };
+
+  // init
+  initTheme();
+  loadStaff();
+  refreshAll();
+  refreshTimer = setInterval(refreshAll, parseInt($('refreshInterval').value, 10));
+})();
+</script>
+</body>
+</html>
