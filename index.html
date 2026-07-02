@@ -359,8 +359,20 @@
       <div class="val" id="likeRatio">—</div>
     </div>
     <div class="card">
-      <div class="label">Staff Sedang Shift</div>
-      <div class="val" id="staffOnNow">—</div>
+      <div class="label">Total Favorite Map</div>
+      <div class="val" id="totalFavorites">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Total Likes Map</div>
+      <div class="val" id="totalLikes">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Total Vote Map</div>
+      <div class="val" id="totalVotes">—</div>
+    </div>
+    <div class="card">
+      <div class="label">Pengunjung Saat Ini</div>
+      <div class="val" id="currentVisitors">—</div>
     </div>
   </div>
 
@@ -437,6 +449,7 @@
   const PROXY_GAMES = "https://games.roproxy.com/v1/games?universeIds=";
   const PROXY_VOTES = "https://games.roproxy.com/v1/games/votes?universeIds=";
   const PROXY_ICON = "https://thumbnails.roproxy.com/v1/games/icons?universeIds=";
+  const PROXY_FAVORITES = "https://games.roproxy.com/v1/games/"; // + uid + "/favorites/count"
 
   let universeId = null;
   let refreshTimer = null;
@@ -492,10 +505,11 @@
   }
 
   async function fetchGameStats(uid){
-    const [gamesRes, votesRes, iconRes] = await Promise.all([
+    const [gamesRes, votesRes, iconRes, favRes] = await Promise.all([
       fetch(PROXY_GAMES + uid),
       fetch(PROXY_VOTES + uid).catch(()=>null),
-      fetch(PROXY_ICON + uid + "&returnPolicy=PlaceHolder&size=256x256&format=Png&isCircular=false").catch(()=>null)
+      fetch(PROXY_ICON + uid + "&returnPolicy=PlaceHolder&size=256x256&format=Png&isCircular=false").catch(()=>null),
+      fetch(PROXY_FAVORITES + uid + "/favorites/count").catch(()=>null)
     ]);
     const games = await gamesRes.json();
     const info = games.data && games.data[0];
@@ -509,7 +523,11 @@
       const ic = await iconRes.json();
       icon = ic.data && ic.data[0] && ic.data[0].imageUrl;
     }
-    return {info, votes, icon};
+    let favorites = null;
+    if(favRes && favRes.ok){
+      favorites = await favRes.json(); // { favoritesCount: number }
+    }
+    return {info, votes, icon, favorites};
   }
 
   function renderDoors(playing, maxPlayers){
@@ -640,7 +658,6 @@
 
     renderStaffList(names);
     renderLogs(logs);
-    $('staffOnNow').textContent = Object.values(staffState).filter(Boolean).length;
   }
 
   function renderStaffList(names){
@@ -731,7 +748,7 @@
       if(!universeId){
         universeId = await resolveUniverseId(placeId);
       }
-      const {info, votes, icon} = await fetchGameStats(universeId);
+      const {info, votes, icon, favorites} = await fetchGameStats(universeId);
       if(!info) throw new Error('Data game tidak ditemukan');
 
       $('gameName').textContent = info.name || 'Map Roblox';
@@ -741,13 +758,24 @@
       $('playingNow').textContent = fmt(info.playing);
       $('totalVisits').textContent = fmt(info.visits);
       $('maxPlayers').textContent = fmt(info.maxPlayers);
+      $('currentVisitors').textContent = fmt(info.playing);
+
+      if(favorites && favorites.favoritesCount !== undefined){
+        $('totalFavorites').textContent = fmt(favorites.favoritesCount);
+      } else {
+        $('totalFavorites').textContent = '—';
+      }
 
       if(votes && (votes.upVotes || votes.downVotes)){
         const total = (votes.upVotes||0) + (votes.downVotes||0);
         const ratio = total ? Math.round((votes.upVotes/total)*100) : 0;
         $('likeRatio').textContent = ratio + '%';
+        $('totalLikes').textContent = fmt(votes.upVotes);
+        $('totalVotes').textContent = fmt(total);
       } else {
         $('likeRatio').textContent = '—';
+        $('totalLikes').textContent = '—';
+        $('totalVotes').textContent = '—';
       }
 
       renderDoors(info.playing, info.maxPlayers);
